@@ -15,13 +15,13 @@ RUN sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.s
     && apt-get source pulseaudio \
     && rm -rf /var/lib/apt/lists/*
 
-RUN cd /pulseaudio-$(pulseaudio --version | awk '{print $2}') \
-    && ./configure
+RUN cd $(find -type d -name "pulseaudio-*$(pulseaudio --version | awk '{print $2}')*") \
+    && meson build
 
 RUN git clone https://github.com/neutrinolabs/pulseaudio-module-xrdp.git /pulseaudio-module-xrdp \
     && cd /pulseaudio-module-xrdp \
     && ./bootstrap \
-    && ./configure PULSE_DIR=/pulseaudio-$(pulseaudio --version | awk '{print $2}') \
+    && ./configure PULSE_DIR=$(find / -maxdepth 1 -type d -name "pulseaudio-*$(pulseaudio --version | awk '{print $2}')*") \
     && make \
     && make install
 
