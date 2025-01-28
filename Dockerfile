@@ -3,7 +3,7 @@
 ARG TAG=latest
 FROM ubuntu:$TAG as builder
 
-RUN sed -i -E 's/^# deb-src /deb-src /g' /etc/apt/sources.list \
+RUN sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources \
     && apt-get update \
     && DEBIAN_FRONTEND="noninteractive" apt-get install -y --no-install-recommends \
         build-essential \
@@ -15,13 +15,13 @@ RUN sed -i -E 's/^# deb-src /deb-src /g' /etc/apt/sources.list \
     && apt-get source pulseaudio \
     && rm -rf /var/lib/apt/lists/*
 
-RUN cd /pulseaudio-$(pulseaudio --version | awk '{print $2}') \
-    && ./configure
+RUN cd $(find -type d -name "pulseaudio-*$(pulseaudio --version | awk '{print $2}')*") \
+    && meson build
 
 RUN git clone https://github.com/neutrinolabs/pulseaudio-module-xrdp.git /pulseaudio-module-xrdp \
     && cd /pulseaudio-module-xrdp \
     && ./bootstrap \
-    && ./configure PULSE_DIR=/pulseaudio-$(pulseaudio --version | awk '{print $2}') \
+    && ./configure PULSE_DIR=$(find / -maxdepth 1 -type d -name "pulseaudio-*$(pulseaudio --version | awk '{print $2}')*") \
     && make \
     && make install
 
